@@ -99,8 +99,8 @@ def test_random(net, test_set):
 
 def main():
     use_cuda = torch.cuda.is_available()
-
     net = LeNet.LeNet(1, 28)
+    path = "./netWeight/"+net.name()
 
     if use_cuda:
         net.cuda()
@@ -109,8 +109,8 @@ def main():
 
     cost = torch.nn.CrossEntropyLoss()
 
-    if os.path.exists("./netWeight/"+net.name()):
-        net.load_state_dict(torch.load("./netWeight/"+net.name()))
+    if os.path.exists(path):
+        net.load_state_dict(torch.load(path))
     else:
         optimizer = torch.optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
         n_epochs = 1
@@ -118,7 +118,7 @@ def main():
         for i in range(n_epochs):
             train(net, train_set, cost, optimizer, i, n_epochs, use_cuda)
         os.mkdir("./netWeight/")
-        torch.save(net.state_dict(), "./netWeight/" + net.name())
+        torch.save(net.state_dict(), path)
 
     test_set = random_data.get_random_data(5000000, 1, 128, 28)
     if use_cuda:
