@@ -117,6 +117,7 @@ def main():
         train_set, test_set = load.get_MNIST()
         for i in range(n_epochs):
             train(net, train_set, cost, optimizer, i, n_epochs, use_cuda)
+        os.mkdir("./netWeight/")
         torch.save(net.state_dict(), "./netWeight/" + net.name())
 
     test_set = random_data.get_random_data(5000000, 1, 128, 28)
