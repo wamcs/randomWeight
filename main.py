@@ -20,8 +20,8 @@ def train(net, dataloader, cost, optimizer, epoch, n_epochs, use_cuda):
     # the model of training
     net.train()
     running_loss = 0.0
-    print "Epoch {}/{}".format(epoch, n_epochs)
-    print "-" * 10
+    print('Epoch {}/{}'.format(epoch, n_epochs))
+    print("-" * 10)
     for data in dataloader:
         x_train, y_train = data
         if use_cuda:
@@ -41,7 +41,7 @@ def train(net, dataloader, cost, optimizer, epoch, n_epochs, use_cuda):
 
         running_loss += loss.data[0]
 
-    print "Loss {}".format(running_loss / len(dataloader))
+    print("Loss {}".format(running_loss / len(dataloader)))
 
 
 # @parameter
@@ -54,8 +54,8 @@ def test(net, testloader, cost, use_cuda):
     test_loss = 0.0
     correct = 0.0
     total = 0
-    print "test process"
-    print "-" * 10
+    print("test process")
+    print("-" * 10)
 
     for data in testloader:
         x_test, y_test = data
@@ -67,7 +67,7 @@ def test(net, testloader, cost, use_cuda):
         _, pred = torch.max(output.data, 1)  # pred: get the index of the max probability
         correct += pred.eq(y_test.data.view_as(pred)).sum()
         total += y_test.size(0)
-    print "Loss {}, Acc {}".format(test_loss / len(testloader), 100 * correct / total)
+    print("Loss {}, Acc {}".format(test_loss / len(testloader), 100 * correct / total))
 
 
 # @parameter
@@ -77,8 +77,8 @@ def test(net, testloader, cost, use_cuda):
 
 def test_random(net, test_set):
     net.eval()
-    print "test process"
-    print "-" * 10
+    print("test process")
+    print("-" * 10)
 
     total = test_set.size(0)
     result = {}
@@ -113,7 +113,7 @@ def main():
         net.load_state_dict(torch.load("./netWeight/"+net.name()))
     else:
         optimizer = torch.optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
-        n_epochs = 100
+        n_epochs = 1
         train_set, test_set = load.get_MNIST()
         for i in range(n_epochs):
             train(net, train_set, cost, optimizer, i, n_epochs, use_cuda)
