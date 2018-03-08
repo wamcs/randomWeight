@@ -19,7 +19,7 @@ def sample_noise(batch_size, dim):
 
 
 def get_random_data(data_size, channel, batch_size, dim):
-    time = data_size / batch_size + 1
+    time = data_size // batch_size + 1
     temp = []
     for i in range(time):
         if i == time - 1:

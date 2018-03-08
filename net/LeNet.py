@@ -10,7 +10,7 @@ class LeNet(nn.Module):
         super(LeNet, self).__init__()
         padding = 0
         if size < 32:
-            padding = (32-size)/2
+            padding = (32-size)//2
         self.conv1 = nn.Conv2d(channel, 6, 5,padding=padding)
         self.conv2 = nn.Conv2d(6, 16, 5)
         self.fc1 = nn.Linear(16 * 5 * 5, 120)
