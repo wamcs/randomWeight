@@ -103,6 +103,7 @@ def test_random(net, data_size, batch_size, channel, dim, use_cuda):
         x_test = Variable(x_test)
         output = net(x_test)
         _, pred = torch.max(output.data, 1)
+        pred = pred.view(-1)
         for j in pred:
             if j in result.keys():
                 result[j] += 1
@@ -133,8 +134,8 @@ def main():
     if os.path.exists(path):
         net.load_state_dict(torch.load(path))
     else:
-        optimizer = torch.optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
-        n_epochs = 1
+        optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+        n_epochs = 250
         train_set, test_set = load.get_MNIST()
         for i in range(n_epochs):
             train(net=net,
@@ -147,7 +148,7 @@ def main():
         torch.save(net.state_dict(), path)
         print('successfully save weights')
 
-    test_random(net=net, data_size=500000, batch_size=10000, channel=1, dim=28, use_cuda=use_cuda)
+    test_random(net=net, data_size=1000000, batch_size=10000, channel=1, dim=28, use_cuda=use_cuda)
 
 
 if __name__ == '__main__':
