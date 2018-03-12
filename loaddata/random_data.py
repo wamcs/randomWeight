@@ -17,6 +17,9 @@ def sample_noise(size, dim):
 
     return temp
 
+def sample_constant(constant,size,dim):
+    temp = constant*torch.ones(size, dim * dim)
+    return temp
 
 # @parameter
 # channel:the channel of input images
@@ -27,3 +30,7 @@ def get_random_data(channel, size, dim):
     raw_data = sample_noise(size, dim)
     return raw_data.view(raw_data.size(0), channel, dim, dim)
 
+
+def get_constant_value(constant,channel,size,dim):
+    raw_data = sample_constant(constant,size,dim)
+    return raw_data.view(raw_data.size(0), channel, dim, dim)

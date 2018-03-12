@@ -86,13 +86,13 @@ def test_random(net, data_size, batch_size, channel, dim, use_cuda):
     print("-" * 10)
 
     result = {}
-    if data_size%batch_size == 0:
+    if data_size % batch_size == 0:
         time = data_size // batch_size
     else:
         time = data_size // batch_size + 1
 
     for i in range(time):
-        print('time {}/{}'.format(i+1, time))
+        print('time {}/{}'.format(i + 1, time))
         if i == time - 1:
             x_test = random_data.get_random_data(channel=channel, size=data_size - (time - 1) * batch_size, dim=dim)
         else:
@@ -115,7 +115,46 @@ def test_random(net, data_size, batch_size, channel, dim, use_cuda):
             f.write("label is {}, and {}% for all data \n".format(i, 100 * result[i] / data_size))
 
 
-def main():
+def test_constant(net, data_size, batch_size, channel, dim, use_cuda, constant):
+    net.eval()
+    print("-" * 10)
+    print("test process")
+    print("-" * 10)
+
+    result = {}
+    if data_size % batch_size == 0:
+        time = data_size // batch_size
+    else:
+        time = data_size // batch_size + 1
+
+    for i in range(time):
+        print('time {}/{}'.format(i + 1, time))
+        if i == time - 1:
+            x_test = random_data.get_constant_value(constant=constant, channel=channel,
+                                                    size=data_size - (time - 1) * batch_size, dim=dim)
+        else:
+            x_test = random_data.get_constant_value(constant=constant, channel=channel, size=batch_size, dim=dim)
+
+        if use_cuda:
+            x_test = x_test.cuda()
+        x_test = Variable(x_test)
+        output = net(x_test)
+        _, pred = torch.max(output.data, 1)
+        pred = pred.view(-1)
+        for j in pred:
+            if j in result.keys():
+                result[j] += 1
+            else:
+                result[j] = 0
+    temp = {}
+    for i in result.keys():
+        temp[i] = 100 * result[i] / data_size
+    with open("result_random.txt", "w") as f:
+        for i in result.keys():
+            f.write("label is {}, and {}% for all data \n".format(i, 100 * result[i] / data_size))
+
+
+def test_random_image():
     use_cuda = torch.cuda.is_available()
     net = LeNet.LeNet(1, 28)
 
@@ -149,7 +188,15 @@ def main():
         print('successfully save weights')
 
     test_random(net=net, data_size=1000000, batch_size=10000, channel=1, dim=28, use_cuda=use_cuda)
+    temp = []
+    for i in range(-1,1,step=0.1):
+        temp.append(test_constant(constant=i,net=net, data_size=1000000, batch_size=10000, channel=1, dim=28, use_cuda=use_cuda))
+    with open("result_constant.txt", "w") as f:
+        for item in temp:
+            for i in item.keys():
+                f.write("label is {}, and {}% for all data \n".format(i, item[i]))
+
 
 
 if __name__ == '__main__':
-    main()
+    test_random_image()
