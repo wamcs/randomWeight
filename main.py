@@ -110,7 +110,7 @@ def test_random(net, data_size, batch_size, channel, dim, use_cuda):
             else:
                 result[j] = 0
 
-    with open("result.txt", "w") as f:
+    with open("result_random.txt", "w") as f:
         for i in result.keys():
             f.write("label is {}, and {}% for all data \n".format(i, 100 * result[i] / data_size))
 
@@ -149,10 +149,7 @@ def test_constant(net, data_size, batch_size, channel, dim, use_cuda, constant):
     temp = {}
     for i in result.keys():
         temp[i] = 100 * result[i] / data_size
-    with open("result_random.txt", "w") as f:
-        for i in result.keys():
-            f.write("label is {}, and {}% for all data \n".format(i, 100 * result[i] / data_size))
-
+    return temp
 
 def test_random_image():
     use_cuda = torch.cuda.is_available()
@@ -168,7 +165,7 @@ def test_random_image():
         cudnn.benchmark = True
         path += '_cuda'
 
-    cost = torch.nn.CrossEntropyLoss()
+    cost = torch.nn.CrossEntropyLoss().cuda()
 
     if os.path.exists(path):
         net.load_state_dict(torch.load(path))
@@ -189,12 +186,12 @@ def test_random_image():
 
     test_random(net=net, data_size=1000000, batch_size=10000, channel=1, dim=28, use_cuda=use_cuda)
     temp = []
-    for i in range(-1,1,step=0.1):
-        temp.append(test_constant(constant=i,net=net, data_size=1000000, batch_size=10000, channel=1, dim=28, use_cuda=use_cuda))
+    for i in range(-10,11):
+        temp.append(test_constant(constant=i*0.1,net=net, data_size=1000000, batch_size=10000, channel=1, dim=28, use_cuda=use_cuda))
     with open("result_constant.txt", "w") as f:
         for item in temp:
-            for i in item.keys():
-                f.write("label is {}, and {}% for all data \n".format(i, item[i]))
+            for j in item.keys():
+                f.write("label is {}, and {}% for all data \n".format(j, item[j]))
 
 
 
