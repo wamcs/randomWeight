@@ -13,14 +13,14 @@ class ran_MNIST(datasets.MNIST):
         super(ran_MNIST, self).__init__(root, train, transform, target_transform, download)
         if random:
             if train:
-                self.random_resize(self.train_data)
+                self.train_data = self.random_resize(self.train_data)
             else:
-                self.random_resize(self.test_data)
+                self.test_data = self.random_resize(self.test_data)
 
     def random_resize(self, datas):
         temps = []
         for data in datas:
-            temp = data.numpy()
+            temp = np.copy(data.numpy())
             np.random.shuffle(temp)
             np.random.shuffle(temp.T)
             temps.append(temp.T)
@@ -49,7 +49,7 @@ class ran_CIFAR(datasets.CIFAR10):
         for data in datas:
             rtemp = []
             for item in data:
-                rtemp.append(item)
+                rtemp.append(np.copy(item))
             row = np.hstack(tuple(rtemp))
             np.random.shuffle(row)
             rtemp = np.hsplit(row,3)

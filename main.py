@@ -181,7 +181,7 @@ def test_random_image(net, use_cuda):
 def train_model(net, cost, optimizer, n_epochs, train_set, use_cuda):
     print('train model')
     if not os.path.exists(net_root):
-        os.mkdir(path=net_root)
+        os.mkdir(net_root)
     path = net_root + net.name
 
     if use_cuda:
