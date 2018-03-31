@@ -67,15 +67,23 @@ def test(net, testloader, cost, use_cuda, type):
             x_test, y_test = x_test.cuda(), y_test.cuda()
         x_test, y_test = Variable(x_test), Variable(y_test)
         output = net(x_test)
-        temp.append(output.data.numpy())
+        if use_cuda:
+            temp.append(output.data.cpu().numpy())
+        else:
+            temp.append(output.data.numpy())
         test_loss += cost(output, y_test).data[0]
-        _, pred = torch.max(output.data, 1)  # pred: get the index of the max probability
-        correct += pred.eq(y_test.data.view_as(pred)).sum()
+        _, pred = torch.max(output.data.cpu(), 1)  # pred: get the index of the max probability
+        correct += pred.eq(y_test.data.cpu().view_as(pred)).sum()
         total += y_test.size(0)
-    with open("{}.txt".format(net.name), "w") as f:
-        f.write("Loss {}, Acc {}".format(test_loss / len(testloader), 100 * correct / total))
     temp = np.vstack(tuple(temp))
-    np.savetxt("{}_{}.csv".format(net.name, type), temp, delimiter=',')
+    if use_cuda:
+        with open("{}_{}.txt".format(net.module.name,type), "w") as f:
+            f.write("Loss {}, Acc {}".format(test_loss / len(testloader), 100 * correct / total))
+        np.savetxt("{}_{}.csv".format(net.module.name,type),temp,delimiter=',')
+    else:
+        with open("{}_{}.txt".format(net.name,type), "w") as f:
+            f.write("Loss {}, Acc {}".format(test_loss / len(testloader), 100 * correct / total))
+        np.savetxt("{}_{}.csv".format(net.name, type), temp, delimiter=',')
 
 
 # @parameter
@@ -178,7 +186,9 @@ def train_model(net, cost, optimizer, n_epochs, train_set, use_cuda):
 
     if use_cuda:
         net.cuda()
+        cost.cuda()
         net = torch.nn.DataParallel(net, device_ids=[2])
+        cost = torch.nn.DataParallel(cost, device_ids=[2])
         cudnn.benchmark = True
         path += '_cuda'
 
@@ -198,6 +208,12 @@ def train_model(net, cost, optimizer, n_epochs, train_set, use_cuda):
 
 def test_model(net, cost, test_set, use_cuda,type):
     print('test model')
+    if use_cuda:
+        net.cuda()
+        cost.cuda()
+        net = torch.nn.DataParallel(net, device_ids=[2])
+        cost = torch.nn.DataParallel(cost, device_ids=[2])
+        cudnn.benchmark = True
     test(net=net,
          testloader=test_set,
          cost=cost,
