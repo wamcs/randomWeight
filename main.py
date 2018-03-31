@@ -5,19 +5,21 @@ import torch.backends.cudnn as cudnn
 import os
 import numpy as np
 
-from net.LeNet import *
+from net.net import *
 from loaddata import load
 
 net_root = './netWeight/'
 
+'''
+  @parameter
+  net: the architecture of training network
+  dataloader: the set of data which comes from load.py in package dataload
+  cost: cost function
+  optimizer: the optimization
+  epoch: the time of present training process
+  n_epochs: the number of training process
+'''
 
-# @parameter
-# net: the architecture of training network
-# dataloader: the set of data which comes from load.py in package dataload
-# cost: cost function
-# optimizer: the optimization
-# epoch: the time of present training process
-# n_epochs: the number of training process
 
 def train(net, dataloader, cost, optimizer, epoch, n_epochs, use_cuda):
     # the model of training
@@ -48,10 +50,13 @@ def train(net, dataloader, cost, optimizer, epoch, n_epochs, use_cuda):
     print("-" * 10)
 
 
-# @parameter
-# net: the architecture of training network
-# testloader: the set of data which comes from load.py in package dataload
-# cost: cost function
+'''
+  @parameter
+  net: the architecture of training network
+  testloader: the set of data which comes from load.py in package dataload
+  cost: cost function
+'''
+
 
 def test(net, testloader, cost, use_cuda, type):
     net.eval()
@@ -77,19 +82,22 @@ def test(net, testloader, cost, use_cuda, type):
         total += y_test.size(0)
     temp = np.vstack(tuple(temp))
     if use_cuda:
-        with open("{}_{}.txt".format(net.module.name,type), "w") as f:
+        with open("{}_{}.txt".format(net.module.name, type), "w") as f:
             f.write("Loss {}, Acc {}".format(test_loss / len(testloader), 100 * correct / total))
-        np.savetxt("{}_{}.csv".format(net.module.name,type),temp,delimiter=',')
+        np.savetxt("{}_{}.csv".format(net.module.name, type), temp, delimiter=',')
     else:
-        with open("{}_{}.txt".format(net.name,type), "w") as f:
+        with open("{}_{}.txt".format(net.name, type), "w") as f:
             f.write("Loss {}, Acc {}".format(test_loss / len(testloader), 100 * correct / total))
         np.savetxt("{}_{}.csv".format(net.name, type), temp, delimiter=',')
 
 
-# @parameter
-# net: the architecture of training network
-# test_set: the set of data which comes from random_data.py in package dataload
-# cost: cost function
+'''
+  @parameter
+  net: the architecture of training network
+  test_set: the set of data which comes from random_data.py in package dataload
+  cost: cost function
+'''
+
 
 def test_random(net, data_size, batch_size, channel, dim, use_cuda):
     net.eval()
@@ -163,6 +171,7 @@ def test_constant(net, data_size, batch_size, channel, dim, use_cuda, constant):
         temp[i] = 100 * result[i] / data_size
     return temp
 
+
 def test_random_image(net, use_cuda):
     test_random(net=net, data_size=1000000, batch_size=10000, channel=1, dim=28, use_cuda=use_cuda)
     temp = []
@@ -206,7 +215,8 @@ def train_model(net, cost, optimizer, n_epochs, train_set, use_cuda):
         torch.save(net.state_dict(), path)
         print('successfully save weights')
 
-def test_model(net, cost, test_set, use_cuda,type):
+
+def test_model(net, cost, test_set, use_cuda, type):
     print('test model')
     if use_cuda:
         net.cuda()
@@ -225,12 +235,12 @@ def test_model(net, cost, test_set, use_cuda,type):
 def main(test=False):
     use_cuda = torch.cuda.is_available()
     MNIST_model = LeNet(name='MNIST_net', category=10, channel=1, size=28)
-    CIFAR_model = LeNet(name='CIFAR_net', category=10, channel=3, size=32)
+    CIFAR_model = FitNet(name='CIFAR_net')
     cost = torch.nn.CrossEntropyLoss()
     MNIST_optimizer = torch.optim.SGD(MNIST_model.parameters(), lr=0.001, momentum=0.9)
     CIFAR_optimizer = torch.optim.SGD(CIFAR_model.parameters(), lr=0.001, momentum=0.9)
     MNIST_epochs = 250
-    CIFAR_epochs = 1000
+    CIFAR_epochs = 300
     MNIST_train_set, MNIST_test_set = load.get_MNIST(True)
     train_model(net=MNIST_model,
                 cost=cost,
