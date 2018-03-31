@@ -34,3 +34,4 @@ def get_random_data(channel, size, dim):
 def get_constant_value(constant,channel,size,dim):
     raw_data = sample_constant(constant,size,dim)
     return raw_data.view(raw_data.size(0), channel, dim, dim)
+

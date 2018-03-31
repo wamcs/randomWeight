@@ -3,8 +3,9 @@ import torch
 from loaddata import random_data
 import torch.backends.cudnn as cudnn
 import os
+import numpy as np
 
-from net import LeNet
+from net.LeNet import *
 from loaddata import load
 
 net_root = './netWeight/'
@@ -52,26 +53,29 @@ def train(net, dataloader, cost, optimizer, epoch, n_epochs, use_cuda):
 # testloader: the set of data which comes from load.py in package dataload
 # cost: cost function
 
-def test(net, testloader, cost, use_cuda):
+def test(net, testloader, cost, use_cuda, type):
     net.eval()
     test_loss = 0.0
     correct = 0.0
     total = 0
     print("-" * 10)
     print("test process")
-
+    temp = []
     for data in testloader:
         x_test, y_test = data
         if use_cuda:
             x_test, y_test = x_test.cuda(), y_test.cuda()
         x_test, y_test = Variable(x_test), Variable(y_test)
         output = net(x_test)
+        temp.append(output.data.numpy())
         test_loss += cost(output, y_test).data[0]
         _, pred = torch.max(output.data, 1)  # pred: get the index of the max probability
         correct += pred.eq(y_test.data.view_as(pred)).sum()
         total += y_test.size(0)
-    print("Loss {}, Acc {}".format(test_loss / len(testloader), 100 * correct / total))
-    print("-" * 10)
+    with open("{}.txt".format(net.name), "w") as f:
+        f.write("Loss {}, Acc {}".format(test_loss / len(testloader), 100 * correct / total))
+    temp = np.vstack(tuple(temp))
+    np.savetxt("{}_{}.csv".format(net.name, type), temp, delimiter=',')
 
 
 # @parameter
@@ -154,28 +158,36 @@ def test_constant(net, data_size, batch_size, channel, dim, use_cuda, constant):
             f.write("label is {}, and {}% for all data \n".format(i, 100 * result[i] / data_size))
 
 
-def test_random_image():
-    use_cuda = torch.cuda.is_available()
-    net = LeNet.LeNet(1, 28)
+def test_random_image(net, use_cuda):
+    test_random(net=net, data_size=1000000, batch_size=10000, channel=1, dim=28, use_cuda=use_cuda)
+    temp = []
 
+    for i in range(-10, 11, step=0.1):
+        temp.append(test_constant(constant=i * 0.1, net=net, data_size=1000000, batch_size=10000, channel=1, dim=28,
+                                  use_cuda=use_cuda))
+    with open("result_constant.txt", "w") as f:
+        for item in temp:
+            f.write("the constant is {}".format(i * 0.1))
+            for j in item.keys():
+                f.write("label is {}, and {}% for all data \n".format(j, item[j]))
+            f.write("\n")
+
+
+def train_model(net, cost, optimizer, n_epochs, train_set, use_cuda):
+    print('train model')
     if not os.path.exists(net_root):
         os.mkdir(path=net_root)
-    path = net_root + net.name()
+    path = net_root + net.name
 
     if use_cuda:
         net.cuda()
-        net = torch.nn.DataParallel(net, device_ids=range(1))
+        net = torch.nn.DataParallel(net, device_ids=[2])
         cudnn.benchmark = True
         path += '_cuda'
-
-    cost = torch.nn.CrossEntropyLoss()
 
     if os.path.exists(path):
         net.load_state_dict(torch.load(path))
     else:
-        optimizer = torch.optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
-        n_epochs = 250
-        train_set, test_set = load.get_MNIST()
         for i in range(n_epochs):
             train(net=net,
                   dataloader=train_set,
@@ -187,16 +199,65 @@ def test_random_image():
         torch.save(net.state_dict(), path)
         print('successfully save weights')
 
-    test_random(net=net, data_size=1000000, batch_size=10000, channel=1, dim=28, use_cuda=use_cuda)
-    temp = []
-    for i in range(-1,1,step=0.1):
-        temp.append(test_constant(constant=i,net=net, data_size=1000000, batch_size=10000, channel=1, dim=28, use_cuda=use_cuda))
-    with open("result_constant.txt", "w") as f:
-        for item in temp:
-            for i in item.keys():
-                f.write("label is {}, and {}% for all data \n".format(i, item[i]))
 
+def test_model(net, cost, test_set, use_cuda,type):
+    print('test model')
+    test(net=net,
+         testloader=test_set,
+         cost=cost,
+         use_cuda=use_cuda,
+         type=type)
+    print('test_finish')
+
+
+def main(test=False):
+    use_cuda = torch.cuda.is_available()
+    MNIST_model = LeNet(name='MNIST_net', category=10, channel=1, size=28)
+    CIFAR_model = LeNet(name='CIFAR_net', category=10, channel=3, size=32)
+    cost = torch.nn.CrossEntropyLoss()
+    MNIST_optimizer = torch.optim.SGD(MNIST_model.parameters(), lr=0.001, momentum=0.9)
+    CIFAR_optimizer = torch.optim.SGD(CIFAR_model.parameters(), lr=0.001, momentum=0.9)
+    MNIST_epochs = 250
+    CIFAR_epochs = 400
+    MNIST_train_set, MNIST_test_set = load.get_MNIST()
+    train_model(net=MNIST_model,
+                cost=cost,
+                optimizer=MNIST_optimizer,
+                n_epochs=MNIST_epochs,
+                train_set=MNIST_train_set,
+                use_cuda=use_cuda)
+
+    CIFAR_train_set, CIFAR_test_set = load.get_CIFAR()
+    train_model(net=CIFAR_model,
+                cost=cost,
+                optimizer=CIFAR_optimizer,
+                n_epochs=CIFAR_epochs,
+                train_set=CIFAR_train_set,
+                use_cuda=use_cuda)
+    if test:
+        test_model(net=MNIST_model,
+                   cost=cost,
+                   test_set=MNIST_test_set,
+                   use_cuda=use_cuda,
+                   type='o')
+        MNIST_train_set, MNIST_test_set = load.get_MNIST(True)
+        test_model(net=MNIST_model,
+                   cost=cost,
+                   test_set=MNIST_train_set,
+                   use_cuda=use_cuda,
+                   type='r')
+        test_model(net=CIFAR_model,
+                   cost=cost,
+                   test_set=CIFAR_test_set,
+                   use_cuda=use_cuda,
+                   type='o')
+        CIFAR_train_set, CIFAR_test_set = load.get_CIFAR(True)
+        test_model(net=CIFAR_model,
+                   cost=cost,
+                   test_set=CIFAR_train_set,
+                   use_cuda=use_cuda,
+                   type='r')
 
 
 if __name__ == '__main__':
-    test_random_image()
+    main(True)
