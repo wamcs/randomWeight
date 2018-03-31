@@ -114,7 +114,7 @@ def test_random(net, data_size, batch_size, channel, dim, use_cuda):
             else:
                 result[j] = 0
 
-    with open("result.txt", "w") as f:
+    with open("result_random.txt", "w") as f:
         for i in result.keys():
             f.write("label is {}, and {}% for all data \n".format(i, 100 * result[i] / data_size))
 
@@ -153,10 +153,7 @@ def test_constant(net, data_size, batch_size, channel, dim, use_cuda, constant):
     temp = {}
     for i in result.keys():
         temp[i] = 100 * result[i] / data_size
-    with open("result_random.txt", "w") as f:
-        for i in result.keys():
-            f.write("label is {}, and {}% for all data \n".format(i, 100 * result[i] / data_size))
-
+    return temp
 
 def test_random_image(net, use_cuda):
     test_random(net=net, data_size=1000000, batch_size=10000, channel=1, dim=28, use_cuda=use_cuda)
@@ -198,7 +195,6 @@ def train_model(net, cost, optimizer, n_epochs, train_set, use_cuda):
                   use_cuda=use_cuda)
         torch.save(net.state_dict(), path)
         print('successfully save weights')
-
 
 def test_model(net, cost, test_set, use_cuda,type):
     print('test model')
