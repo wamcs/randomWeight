@@ -30,46 +30,22 @@ class LeNet(nn.Module):
         return out
 
 
-class FitNet(nn.Module):
+class modify_VGG(nn.Module):
     def __init__(self,name):
-        super(FitNet, self).__init__()
+        super(modify_VGG, self).__init__()
         self.layers = nn.Sequential(
-            nn.Conv2d(3, 32, 3, padding=1),
-            nn.ReLU(True),
-            nn.Conv2d(32, 32, 3, padding=1),
-            nn.ReLU(True),
-            nn.Conv2d(32, 32, 3, padding=1),
-            nn.ReLU(True),
-            nn.Conv2d(32, 48, 3, padding=1),
-            nn.ReLU(True),
-            nn.Conv2d(48, 48, 3, padding=1),
-            nn.ReLU(True),
-            nn.AvgPool2d(2),
-            nn.Conv2d(48, 80, 3, padding=1),
-            nn.ReLU(True),
-            nn.Conv2d(80, 80, 3, padding=1),
-            nn.ReLU(True),
-            nn.Conv2d(80, 80, 3, padding=1),
-            nn.ReLU(True),
-            nn.Conv2d(80, 80, 3, padding=1),
-            nn.ReLU(True),
-            nn.Conv2d(80, 80, 3, padding=1),
-            nn.ReLU(True),
-            nn.AvgPool2d(2),
-            nn.Conv2d(80, 128, 3, padding=1),
-            nn.ReLU(True),
+            nn.Conv2d(3, 64, 3, padding=1),
+            nn.Conv2d(64, 64, 3, padding=1),
+            nn.MaxPool2d(2),
+            nn.Conv2d(64, 128, 3, padding=1),
             nn.Conv2d(128, 128, 3, padding=1),
-            nn.ReLU(True),
-            nn.Conv2d(128, 128, 3, padding=1),
-            nn.ReLU(True),
-            nn.Conv2d(128, 128, 3, padding=1),
-            nn.ReLU(True),
-            nn.Conv2d(128, 128, 3, padding=1),
-            nn.ReLU(True),
-            nn.AvgPool2d(8),
+            nn.MaxPool2d(2),
+            nn.Conv2d(128, 256, 3, padding=1),
+            nn.Conv2d(256, 256, 3, padding=1),
+            nn.MaxPool2d(2),
         )
-        self.fc1=nn.Linear(128,500)
-        self.fc2=nn.Linear(500,10)
+        self.fc1=nn.Linear(256*4*4,4096)
+        self.fc2=nn.Linear(4096,10)
         self.name = name
 
     def forward(self,x):

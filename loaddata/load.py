@@ -70,3 +70,27 @@ def get_CIFAR(random=False):
     print(len(datas))
 
     return data_loader_train, data_loader_test
+
+def get_all_ran_CIFAR(random):
+    train_datas = all_ran_CIFAR(root="./data/CIFAR",
+                                train=True,
+                                transform=transforms,
+                                download=True,
+                                random=random)
+
+    test_datas = all_ran_CIFAR(root="./data/CIFAR",
+                               train=False,
+                               transform=transforms,
+                               download=True,
+                               random=random)
+
+    data_loader_train = torch.utils.data.DataLoader(dataset=train_datas,
+                                                    batch_size=batch_size,
+                                                    shuffle=True,
+                                                    num_workers=4)
+
+    data_loader_test = torch.utils.data.DataLoader(dataset=test_datas,
+                                                   batch_size=batch_size,
+                                                   shuffle=True,
+                                                   num_workers=4)
+    return data_loader_train, data_loader_test

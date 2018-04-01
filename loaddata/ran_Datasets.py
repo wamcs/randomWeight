@@ -7,7 +7,8 @@ import numpy as np
     including line's and row's
 
 '''
-base = np.random.permutation(range(784))
+base1 = np.random.permutation(range(28*28))
+base2 = np.random.permutation(range(32*32))
 
 
 class ran_MNIST(datasets.MNIST):
@@ -21,8 +22,8 @@ class ran_MNIST(datasets.MNIST):
             temp2 = np.copy(self.test_data.numpy())
             temp = np.concatenate((temp1, temp2), axis=0)
             temp = self.random_resize(temp)
-            self.train_data = torch.ByteTensor(temp[:size1])
-            self.test_data = torch.ByteTensor(temp[size1:])
+            self.train_data = torch.from_numpy(temp[:size1])
+            self.test_data = torch.from_numpy(temp[size1:])
 
     def set_mode(self, train=True):
         if train:
@@ -50,7 +51,7 @@ class ran_MNIST(datasets.MNIST):
 
 
 class all_ran_MNIST(datasets.MNIST):
-    def __init__(self, root, train = True,transform=None, target_transform=None, download=False, random=False):
+    def __init__(self, root, train=True, transform=None, target_transform=None, download=False, random=False):
         super(all_ran_MNIST, self).__init__(root, train, transform, target_transform, download)
         if random:
             if train:
@@ -58,8 +59,7 @@ class all_ran_MNIST(datasets.MNIST):
             else:
                 self.test_data = self.random_resize(self.test_data)
 
-
-    def permute_mnist(self,x, n, p):
+    def permute_mnist(self, x, n, p):
         """ permute mnist images
 
         Args:
@@ -79,15 +79,15 @@ class all_ran_MNIST(datasets.MNIST):
     def random_resize(self, datas):
         temp = np.copy(datas.numpy())
         size = temp.shape[0]
-        temp = temp.reshape((size,-1))
-        out = self.permute_mnist(temp,size,base)
-        out = out.reshape((size,28,28))
-        return torch.ByteTensor(out)
+        temp = temp.reshape((size, -1))
+        out = self.permute_mnist(temp, size, base1)
+        out = out.reshape((size, 28, 28))
+        return torch.from_numpy(out)
+
 
 '''
    like ran_MNIST
 '''
-
 
 class ran_CIFAR(datasets.CIFAR10):
     def __init__(self, root, transform=None, target_transform=None, download=False, random=False):
@@ -161,3 +161,43 @@ class ran_CIFAR(datasets.CIFAR10):
         #     temps.append(temp)
         # temps = np.array(temps)
         # return temps
+
+class all_ran_CIFAR(datasets.CIFAR10):
+    def __init__(self, root, train=True, transform=None, target_transform=None, download=False, random=False):
+        super(all_ran_CIFAR, self).__init__(root, train, transform, target_transform, download)
+        if random:
+            if train:
+                self.train_data = self.train_data.transpose((0, 3, 1, 2))
+                self.train_data = self.random_resize(self.train_data)
+                self.train_data = self.train_data.transpose((0, 2, 3, 1))
+            else:
+                self.test_data = self.test_data.transpose((0, 3, 1, 2))
+                self.test_data = self.random_resize(self.test_data)
+                self.test_data = self.test_data.transpose((0, 2, 3, 1))
+
+    def permute_mnist(self, x, n, p):
+        """ permute mnist images
+
+        Args:
+             x: input tensor with shape: [n, 784]
+             n: number of images
+             p: random permute matrix
+
+        Returns:
+            x_permute: output tensor with permute
+        """
+        x_permute = np.zeros([n, 3, 32*32])
+        for i in range(n):
+            for j in range(3):
+                for k in range(32*32):
+                    x_permute[i][j][k] = x[i][j][p[k]]
+        return x_permute
+
+    def random_resize(self, datas):
+        temp = np.copy(datas)
+        size = temp.shape[0]
+        temp = temp.reshape((size,3, -1))
+        out = self.permute_mnist(temp, size, base2)
+        out = out.reshape((size, 3, 32, 32))
+        return out
+
