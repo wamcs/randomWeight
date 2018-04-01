@@ -6,48 +6,44 @@ batch_size = 128
 
 
 def get_MNIST(random=False):
-    data_train = ran_MNIST(root="./data/MINST",
+
+    datas = ran_MNIST(root="./data/MINST",
                            transform=transforms,
-                           train=True,
                            download=True,
                            random=random)
-    data_test = ran_MNIST(root="./data/MINST",
-                          transform=transforms,
-                          download=True,
-                          train=False,
-                          random=random)
-
-    data_loader_train = torch.utils.data.DataLoader(dataset=data_train,
+    datas.set_mode(True)
+    data_loader_train = torch.utils.data.DataLoader(dataset=datas,
                                                     batch_size=batch_size,
                                                     shuffle=True,
                                                     num_workers=4)
-    data_loader_test = torch.utils.data.DataLoader(dataset=data_test,
+    print(len(datas))
+    datas.set_mode(False)
+    data_loader_test = torch.utils.data.DataLoader(dataset=datas,
                                                    batch_size=batch_size,
                                                    shuffle=True,
                                                    num_workers=4)
+    print(len(datas))
     return data_loader_train, data_loader_test
 
 
 def get_CIFAR(random=False):
-    data_train = ran_CIFAR(root="./data/CIFAR",
+    datas = ran_CIFAR(root="./data/CIFAR",
                            transform=transforms,
-                           train=True,
                            download=True,
                            random=random)
-
-    data_test = ran_CIFAR(root="./data/CIFAR",
-                          transform=transforms,
-                          train=False,
-                          random=random)
-
-    data_loader_train = torch.utils.data.DataLoader(dataset=data_train,
+    datas.set_mode(True)
+    data_loader_train = torch.utils.data.DataLoader(dataset=datas,
                                                     batch_size=batch_size,
                                                     shuffle=True,
                                                     num_workers=4)
+    print(len(datas))
 
-    data_loader_test = torch.utils.data.DataLoader(dataset=data_test,
+    datas.set_mode(False)
+    data_loader_test = torch.utils.data.DataLoader(dataset=datas,
                                                    batch_size=batch_size,
                                                    shuffle=True,
                                                    num_workers=4)
+    print(len(datas))
 
     return data_loader_train, data_loader_test
+
