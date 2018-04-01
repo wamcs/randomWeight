@@ -7,6 +7,7 @@ import numpy as np
     including line's and row's
 
 '''
+base = np.random.permutation(range(784))
 
 
 class ran_MNIST(datasets.MNIST):
@@ -15,6 +16,7 @@ class ran_MNIST(datasets.MNIST):
         super(ran_MNIST, self).__init__(root, False, transform, target_transform, download)
         if random:
             temp1 = np.copy(self.train_data.numpy())
+            print(temp1[0])
             size1 = temp1.shape[0]
             temp2 = np.copy(self.test_data.numpy())
             temp = np.concatenate((temp1, temp2), axis=0)
@@ -46,6 +48,41 @@ class ran_MNIST(datasets.MNIST):
         # temps = np.array(temps)
         # return torch.ByteTensor(temps)
 
+
+class all_ran_MNIST(datasets.MNIST):
+    def __init__(self, root, train = True,transform=None, target_transform=None, download=False, random=False):
+        super(all_ran_MNIST, self).__init__(root, train, transform, target_transform, download)
+        if random:
+            if train:
+                self.train_data = self.random_resize(self.train_data)
+            else:
+                self.test_data = self.random_resize(self.test_data)
+
+
+    def permute_mnist(self,x, n, p):
+        """ permute mnist images
+
+        Args:
+             x: input tensor with shape: [n, 784]
+             n: number of images
+             p: random permute matrix
+
+        Returns:
+            x_permute: output tensor with permute
+        """
+        x_permute = np.zeros([n, 784])
+        for i in range(n):
+            for j in range(784):
+                x_permute[i][j] = x[i][p[j]]
+        return x_permute
+
+    def random_resize(self, datas):
+        temp = np.copy(datas.numpy())
+        size = temp.shape[0]
+        temp = temp.reshape((size,-1))
+        out = self.permute_mnist(temp,size,base)
+        out = out.reshape((size,28,28))
+        return torch.ByteTensor(out)
 
 '''
    like ran_MNIST

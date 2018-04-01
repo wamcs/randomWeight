@@ -235,13 +235,13 @@ def test_model(net, cost, test_set, use_cuda, type):
 def main(test=False):
     use_cuda = torch.cuda.is_available()
     MNIST_model = LeNet(name='MNIST_net', category=10, channel=1, size=28)
-    CIFAR_model = FitNet(name='CIFAR_net')
+    # CIFAR_model = FitNet(name='CIFAR_net')
     cost = torch.nn.CrossEntropyLoss()
     MNIST_optimizer = torch.optim.SGD(MNIST_model.parameters(), lr=0.001, momentum=0.9)
-    CIFAR_optimizer = torch.optim.SGD(CIFAR_model.parameters(), lr=0.001, momentum=0.9)
+    # CIFAR_optimizer = torch.optim.SGD(CIFAR_model.parameters(), lr=0.001, momentum=0.9)
     MNIST_epochs = 250
-    CIFAR_epochs = 300
-    MNIST_train_set, MNIST_test_set = load.get_MNIST(True)
+    # CIFAR_epochs = 300
+    MNIST_train_set, MNIST_test_set = load.get_all_ran_MNIST(True)
     train_model(net=MNIST_model,
                 cost=cost,
                 optimizer=MNIST_optimizer,
@@ -249,23 +249,22 @@ def main(test=False):
                 train_set=MNIST_train_set,
                 use_cuda=use_cuda)
 
-    CIFAR_train_set, CIFAR_test_set = load.get_CIFAR(True)
-    train_model(net=CIFAR_model,
-                cost=cost,
-                optimizer=CIFAR_optimizer,
-                n_epochs=CIFAR_epochs,
-                train_set=CIFAR_train_set,
-                use_cuda=use_cuda)
+    # CIFAR_train_set, CIFAR_test_set = load.get_CIFAR(True)
+    # train_model(net=CIFAR_model,
+    #             cost=cost,
+    #             optimizer=CIFAR_optimizer,
+    #             n_epochs=CIFAR_epochs,
+    #             train_set=CIFAR_train_set,
+    #             use_cuda=use_cuda)
     if test:
         # test_model(net=MNIST_model,
         #            cost=cost,
         #            test_set=MNIST_test_set,
         #            use_cuda=use_cuda,
         #            type='o')
-        MNIST_train_set, MNIST_test_set = load.get_MNIST()
         test_model(net=MNIST_model,
                    cost=cost,
-                   test_set=MNIST_train_set,
+                   test_set=MNIST_test_set,
                    use_cuda=use_cuda,
                    type='r')
         # test_model(net=CIFAR_model,
@@ -273,12 +272,11 @@ def main(test=False):
         #            test_set=CIFAR_test_set,
         #            use_cuda=use_cuda,
         #            type='o')
-        CIFAR_train_set, CIFAR_test_set = load.get_CIFAR()
-        test_model(net=CIFAR_model,
-                   cost=cost,
-                   test_set=CIFAR_train_set,
-                   use_cuda=use_cuda,
-                   type='r')
+        # test_model(net=CIFAR_model,
+        #            cost=cost,
+        #            test_set=CIFAR_test_set,
+        #            use_cuda=use_cuda,
+        #            type='r')
 
 
 if __name__ == '__main__':
