@@ -17,7 +17,6 @@ class ran_MNIST(datasets.MNIST):
         super(ran_MNIST, self).__init__(root, False, transform, target_transform, download)
         if random:
             temp1 = np.copy(self.train_data.numpy())
-            print(temp1[0])
             size1 = temp1.shape[0]
             temp2 = np.copy(self.test_data.numpy())
             temp = np.concatenate((temp1, temp2), axis=0)
@@ -60,16 +59,6 @@ class all_ran_MNIST(datasets.MNIST):
                 self.test_data = self.random_resize(self.test_data)
 
     def permute_mnist(self, x, n, p):
-        """ permute mnist images
-
-        Args:
-             x: input tensor with shape: [n, 784]
-             n: number of images
-             p: random permute matrix
-
-        Returns:
-            x_permute: output tensor with permute
-        """
         x_permute = np.zeros([n, 784])
         for i in range(n):
             for j in range(784):
@@ -175,18 +164,8 @@ class all_ran_CIFAR(datasets.CIFAR10):
                 self.test_data = self.random_resize(self.test_data)
                 self.test_data = self.test_data.transpose((0, 2, 3, 1))
 
-    def permute_mnist(self, x, n, p):
-        """ permute mnist images
-
-        Args:
-             x: input tensor with shape: [n, 784]
-             n: number of images
-             p: random permute matrix
-
-        Returns:
-            x_permute: output tensor with permute
-        """
-        x_permute = np.zeros([n, 3, 32*32])
+    def permute_cifar(self, x, n, p):
+        x_permute = np.zeros([n, 3, 32*32]).astype(dtype=np.uint8)
         for i in range(n):
             for j in range(3):
                 for k in range(32*32):
@@ -197,7 +176,7 @@ class all_ran_CIFAR(datasets.CIFAR10):
         temp = np.copy(datas)
         size = temp.shape[0]
         temp = temp.reshape((size,3, -1))
-        out = self.permute_mnist(temp, size, base2)
+        out = self.permute_cifar(temp, size, base2)
         out = out.reshape((size, 3, 32, 32))
         return out
 

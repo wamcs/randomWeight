@@ -58,37 +58,37 @@ def train(net, dataloader, cost, optimizer, epoch, n_epochs, use_cuda):
 '''
 
 
-def test(net, testloader, cost, use_cuda, type):
+def test(net, testloader, cost, use_cuda):
     net.eval()
     test_loss = 0.0
     correct = 0.0
     total = 0
     print("-" * 10)
     print("test process")
-    temp = []
+    # temp = []
     for data in testloader:
         x_test, y_test = data
         if use_cuda:
             x_test, y_test = x_test.cuda(), y_test.cuda()
         x_test, y_test = Variable(x_test), Variable(y_test)
         output = net(x_test)
-        if use_cuda:
-            temp.append(output.data.cpu().numpy())
-        else:
-            temp.append(output.data.numpy())
+        # if use_cuda:
+        #     temp.append(output.data.cpu().numpy())
+        # else:
+        #     temp.append(output.data.numpy())
         test_loss += cost(output, y_test).data[0]
         _, pred = torch.max(output.data.cpu(), 1)  # pred: get the index of the max probability
         correct += pred.eq(y_test.data.cpu().view_as(pred)).sum()
         total += y_test.size(0)
-    temp = np.vstack(tuple(temp))
+    # temp = np.vstack(tuple(temp))
     if use_cuda:
-        with open("{}_{}.txt".format(net.module.name, type), "w") as f:
+        with open("{}.txt".format(net.module.name), "w") as f:
             f.write("Loss {}, Acc {}".format(test_loss / len(testloader), 100 * correct / total))
-        np.savetxt("{}_{}.csv".format(net.module.name, type), temp, delimiter=',')
+            # np.savetxt("{}_{}.csv".format(net.module.name, type), temp, delimiter=',')
     else:
-        with open("{}_{}.txt".format(net.name, type), "w") as f:
+        with open("{}.txt".format(net.name), "w") as f:
             f.write("Loss {}, Acc {}".format(test_loss / len(testloader), 100 * correct / total))
-        np.savetxt("{}_{}.csv".format(net.name, type), temp, delimiter=',')
+            # np.savetxt("{}_{}.csv".format(net.name, type), temp, delimiter=',')
 
 
 '''
@@ -192,7 +192,7 @@ def train_model(net, cost, optimizer, n_epochs, train_set, use_cuda):
     if not os.path.exists(net_root):
         os.mkdir(net_root)
     path = net_root + net.name
-
+    net.train()
     if use_cuda:
         net.cuda()
         cost.cuda()
@@ -216,8 +216,9 @@ def train_model(net, cost, optimizer, n_epochs, train_set, use_cuda):
         print('successfully save weights')
 
 
-def test_model(net, cost, test_set, use_cuda, type):
+def test_model(net, cost, test_set, use_cuda):
     print('test model')
+    net.eval()
     if use_cuda:
         net.cuda()
         cost.cuda()
@@ -227,21 +228,28 @@ def test_model(net, cost, test_set, use_cuda, type):
     test(net=net,
          testloader=test_set,
          cost=cost,
-         use_cuda=use_cuda,
-         type=type)
+         use_cuda=use_cuda)
     print('test_finish')
 
 
-def main(test=False):
+def permute_part(test=False):
     use_cuda = torch.cuda.is_available()
     MNIST_model = LeNet(name='MNIST_net', category=10, channel=1, size=28)
     CIFAR_model = modify_VGG(name='CIFAR_net')
+    CIFAR_origin_model = modify_VGG(name='CIFAR_origin_net')
     cost = torch.nn.CrossEntropyLoss()
     MNIST_optimizer = torch.optim.SGD(MNIST_model.parameters(), lr=0.01, momentum=0.9)
     CIFAR_optimizer = torch.optim.SGD(CIFAR_model.parameters(), lr=0.01, momentum=0.9)
+    CIFAR_origin_optimizer = torch.optim.SGD(CIFAR_origin_model.parameters(), lr=0.01, momentum=0.9)
     MNIST_epochs = 250
-    CIFAR_epochs = 300
-    MNIST_train_set, MNIST_test_set = load.get_all_ran_MNIST(True)
+    CIFAR_epochs = 400
+    CIFAR_origin_epochs = 400
+    datas = load.get_MNIST(True)
+    datas.set_mode(True)
+    MNIST_train_set = torch.utils.data.DataLoader(dataset=datas,
+                                                  batch_size=300,
+                                                  shuffle=True,
+                                                  num_workers=1)
     train_model(net=MNIST_model,
                 cost=cost,
                 optimizer=MNIST_optimizer,
@@ -249,35 +257,75 @@ def main(test=False):
                 train_set=MNIST_train_set,
                 use_cuda=use_cuda)
 
-    CIFAR_train_set, CIFAR_test_set = load.get_CIFAR(True)
+    CIFAR_datas = load.get_CIFAR(True)
+    CIFAR_datas.set_mode(True)
+    CIFAR_train_set = torch.utils.data.DataLoader(dataset=CIFAR_datas,
+                                                  batch_size=300,
+                                                  shuffle=True,
+                                                  num_workers=1)
+
     train_model(net=CIFAR_model,
                 cost=cost,
                 optimizer=CIFAR_optimizer,
                 n_epochs=CIFAR_epochs,
                 train_set=CIFAR_train_set,
                 use_cuda=use_cuda)
+
+    # MNIST_train_set, MNIST_test_set = load.get_MNIST(True)
+    # train_model(net=MNIST_model,
+    #             cost=cost,
+    #             optimizer=MNIST_optimizer,
+    #             n_epochs=MNIST_epochs,
+    #             train_set=MNIST_train_set,
+    #             use_cuda=use_cuda)
+
+    # CIFAR_train_set, CIFAR_test_set = load.get_all_ran_CIFAR(True)
+    # train_model(net=CIFAR_model,
+    #             cost=cost,
+    #             optimizer=CIFAR_optimizer,
+    #             n_epochs=CIFAR_epochs,
+    #             train_set=CIFAR_train_set,
+    #             use_cuda=use_cuda)
+    #
+    # CIFAR_origin_train_set, CIFAR_origin_test_set = load.get_all_ran_CIFAR(False)
+    # train_model(net=CIFAR_origin_model,
+    #             cost=cost,
+    #             optimizer=CIFAR_origin_optimizer,
+    #             n_epochs=CIFAR_origin_epochs,
+    #             train_set=CIFAR_origin_train_set,
+    #             use_cuda=use_cuda)
     if test:
-        # test_model(net=MNIST_model,
-        #            cost=cost,
-        #            test_set=MNIST_test_set,
-        #            use_cuda=use_cuda,
-        #            type='o')
+        datas.set_mode(False)
+        MNIST_test_set = torch.utils.data.DataLoader(dataset=datas,
+                                                     batch_size=300,
+                                                     shuffle=True,
+                                                     num_workers=1)
+
         test_model(net=MNIST_model,
                    cost=cost,
                    test_set=MNIST_test_set,
-                   use_cuda=use_cuda,
-                   type='r')
-        # test_model(net=CIFAR_model,
-        #            cost=cost,
-        #            test_set=CIFAR_test_set,
-        #            use_cuda=use_cuda,
-        #            type='o')
+                   use_cuda=use_cuda)
+
+        CIFAR_datas.set_mode(False)
+        CIFAR_test_set = torch.utils.data.DataLoader(dataset=CIFAR_datas,
+                                                     batch_size=300,
+                                                     shuffle=True,
+                                                     num_workers=1)
+
         test_model(net=CIFAR_model,
                    cost=cost,
                    test_set=CIFAR_test_set,
-                   use_cuda=use_cuda,
-                   type='r')
+                   use_cuda=use_cuda)
+
+        # test_model(net=CIFAR_origin_model,
+        #            cost=cost,
+        #            test_set=CIFAR_origin_test_set,
+        #            use_cuda=use_cuda)
+
+
+def main():
+    permute_part(True)
 
 
 if __name__ == '__main__':
-    main(True)
+    main()
