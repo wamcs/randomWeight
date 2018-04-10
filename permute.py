@@ -13,7 +13,7 @@ from loaddata.p_creator import *
 net_root = './netWeight/'
 'this variable used to control whether retrain net'
 net_type = {'M0': False, 'M1': True, 'M2': True}
-net_epochs = {'MNIST': 150, 'CIFAR': 200, 'ImageNet': 400}
+net_epochs = {'MNIST': 250, 'CIFAR': 300, 'ImageNet': 400}
 
 '''
   @parameter
@@ -95,6 +95,7 @@ def test(net, testloader, cost, use_cuda):
 
 def train_model(net, cost, optimizer, n_epochs, train_set, use_cuda, type, index, retrain=False):
     print('train model')
+    print(use_cuda)
     if not os.path.exists(net_root):
         os.mkdir(net_root)
     path = net_root + net.name + '_' + type + '_' + str(index)
@@ -175,8 +176,10 @@ def MNIST(times=3, retrain=False):
             cost = torch.nn.CrossEntropyLoss()
             temp = []
             model = LeNet(name='MNIST_net')
+            print(model)
             optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
-            epochs = net_epochs['MINST']
+            print(optimizer)
+            epochs = net_epochs['MNIST']
             start = time.time()
 
             if key == 'M0':
@@ -330,8 +333,8 @@ def ImageNet(category, times=3, retrain=False):
         for j in range(times):
             cost = torch.nn.CrossEntropyLoss()
             temp = []
-            model = models.vgg19(pretrained=False)
-            optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
+            model = models.vgg19(category)
+            optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
             epochs = net_epochs['ImageNet']
             start = time.time()
 
