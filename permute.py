@@ -13,7 +13,7 @@ from loaddata.p_creator import *
 net_root = './netWeight/'
 'this variable used to control whether retrain net'
 net_type = {'M0': False, 'M1': True, 'M2': True}
-net_epochs = {'MNIST': 250, 'CIFAR': 300, 'ImageNet': 400}
+net_epochs = {'MNIST': 250, 'CIFAR': 300, 'ImageNet': 150}
 
 '''
   @parameter
@@ -103,8 +103,8 @@ def train_model(net, cost, optimizer, n_epochs, train_set, use_cuda, type, index
     if use_cuda:
         net.cuda()
         cost.cuda()
-        # net = torch.nn.DataParallel(net, device_ids=[2])
-        # cost = torch.nn.DataParallel(cost, device_ids=[2])
+        # net = torch.nn.DataParallel(net, device_ids=[0,1])
+        # cost = torch.nn.DataParallel(cost, device_ids=[0,1])
         cudnn.benchmark = True
         path += '_cuda'
 
@@ -169,16 +169,12 @@ def MNIST(times=3, retrain=False):
     else:
         ps = []
     for i, key in enumerate(net_type.keys()):
-        if not reuse:
-            p_list = []
         temps = []  # time,train time, test time, test loss, test accuracy
         for j in range(times):
             cost = torch.nn.CrossEntropyLoss()
             temp = []
             model = LeNet(name='MNIST_net')
-            print(model)
             optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
-            print(optimizer)
             epochs = net_epochs['MNIST']
             start = time.time()
 
@@ -186,17 +182,17 @@ def MNIST(times=3, retrain=False):
                 train_set, test_set = load.get_MNIST(random=False, p=None)
             if key == 'M1':
                 if reuse:
-                    p = list(ps[(i - 1) * times + j + 1])
+                    p = ps[(i - 1) * times + j + 1]
                 else:
                     p = M1(28)
-                    p_list.append(p)
+                    ps.append(p)
                 train_set, test_set = load.get_MNIST(random=True, p=p)
             if key == 'M2':
                 if reuse:
-                    p = list(ps[(i - 1) * times + j + 1])
+                    p = ps[(i - 1) * times + j + 1]
                 else:
                     p = M2(28)
-                    p_list.append(p)
+                    ps.append(p)
                 train_set, test_set = load.get_MNIST(random=True, p=p)
 
             train_time = train_model(net=model,
@@ -221,8 +217,6 @@ def MNIST(times=3, retrain=False):
             temps.append(temp)
 
         statistic[key] = temps
-        if not reuse:
-            ps.append(p_list)
     if not reuse:
         ps = np.array(ps)
         np.savetxt('MNIST.csv', ps, delimiter=',')
@@ -249,13 +243,11 @@ def CIFAR(times=3, retrain=False):
     else:
         ps = []
     for i, key in enumerate(net_type.keys()):
-        if not reuse:
-            p_list = []
         temps = []  # time,train time, test time, test loss, test accuracy
         for j in range(times):
             cost = torch.nn.CrossEntropyLoss()
             temp = []
-            model = LeNet(name='CIFAR_net')
+            model = modify_VGG(name='CIFAR_net')
             optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
             epochs = net_epochs['CIFAR']
             start = time.time()
@@ -264,17 +256,17 @@ def CIFAR(times=3, retrain=False):
                 train_set, test_set = load.get_CIFAR(random=False, p=None)
             if key == 'M1':
                 if reuse:
-                    p = list(ps[(i - 1) * times + j + 1])
+                    p = ps[(i - 1) * times + j + 1]
                 else:
                     p = M1(32)
-                    p_list.append(p)
+                    ps.append(p)
                 train_set, test_set = load.get_CIFAR(random=True, p=p)
             if key == 'M2':
                 if reuse:
-                    p = list(ps[(i - 1) * times + j + 1])
+                    p = ps[(i - 1) * times + j + 1]
                 else:
                     p = M2(32)
-                    p_list.append(p)
+                    ps.append(p)
                 train_set, test_set = load.get_CIFAR(random=True, p=p)
 
             train_time = train_model(net=model,
@@ -299,8 +291,6 @@ def CIFAR(times=3, retrain=False):
             temps.append(temp)
 
         statistic[key] = temps
-        if not reuse:
-            ps.append(p_list)
     if not reuse:
         ps = np.array(ps)
         np.savetxt('CIFAR.csv', ps, delimiter=',')
@@ -314,7 +304,7 @@ def CIFAR(times=3, retrain=False):
                         item[0], item[1], item[2], item[3], item[4]))
 
 
-def ImageNet(category, times=3, retrain=False):
+def ImageNet(category, times=1, retrain=False):
     use_cuda = torch.cuda.is_available()
     reuse = False
     statistic = {}
@@ -327,14 +317,13 @@ def ImageNet(category, times=3, retrain=False):
     else:
         ps = []
     for i, key in enumerate(net_type.keys()):
-        if not reuse:
-            p_list = []
         temps = []  # time,train time, test time, test loss, test accuracy
         for j in range(times):
             cost = torch.nn.CrossEntropyLoss()
             temp = []
-            model = models.vgg19(category)
-            optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+            model = models.vgg19(False,num_classes=category)
+            model.name = 'VGG' + str(category)
+            optimizer = torch.optim.SGD(model.parameters(),lr=0.01,momentum=0.9)
             epochs = net_epochs['ImageNet']
             start = time.time()
 
@@ -342,17 +331,17 @@ def ImageNet(category, times=3, retrain=False):
                 train_set, test_set = load.get_imageNet(random=False, p=None, category=category)
             if key == 'M1':
                 if reuse:
-                    p = list(ps[(i - 1) * times + j + 1])
+                    p = ps[(i - 1) * times + j + 1]
                 else:
                     p = M1(224)
-                    p_list.append(p)
+                    ps.append(p)
                 train_set, test_set = load.get_imageNet(random=True, p=p, category=category)
             if key == 'M2':
                 if reuse:
-                    p = list(ps[(i - 1) * times + j + 1])
+                    p = ps[(i - 1) * times + j + 1]
                 else:
                     p = M2(224)
-                    p_list.append(p)
+                    ps.append(p)
                 train_set, test_set = load.get_imageNet(random=True, p=p, category=category)
 
             train_time = train_model(net=model,
@@ -377,8 +366,6 @@ def ImageNet(category, times=3, retrain=False):
             temps.append(temp)
 
         statistic[key] = temps
-        if not reuse:
-            ps.append(p_list)
     if not reuse:
         ps = np.array(ps)
         np.savetxt('ImageNet_{}.csv'.format(category), ps, delimiter=',')
@@ -394,11 +381,10 @@ def ImageNet(category, times=3, retrain=False):
 
 def main():
     MNIST()
-    CIFAR()
-    ImageNet(10)
-    ImageNet(20)
+    #CIFAR()
+    #ImageNet(10)
 
 
 if __name__ == '__main__':
-    os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+    #os.environ["CUDA_VISIBLE_DEVICES"] = "1"
     main()

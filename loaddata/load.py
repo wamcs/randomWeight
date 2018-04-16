@@ -71,23 +71,24 @@ def get_imageNet(random, p, category):
                            p=p,
                            category=category,
                            train=True,
-                           transform=transform,
+                           transform=vgg_transform,
                            random=random)
 
     test_datas = ImageNet(root="/home/data/data/ImageNet_ilsvrc2012_2014/train/",
                           p=p,
                           category=category,
                           train=False,
-                          transform=transform,
+                          transform=vgg_transform,
                           random=random)
 
     data_loader_train = torch.utils.data.DataLoader(dataset=train_datas,
-                                                    batch_size=batch_size,
+                                                    batch_size=50,
                                                     shuffle=True,
-                                                    num_workers=2)
+                                                    num_workers=1)
 
     data_loader_test = torch.utils.data.DataLoader(dataset=test_datas,
-                                                   batch_size=batch_size,
+                                                   batch_size=50,
                                                    shuffle=True,
-                                                   num_workers=2)
+                                                   num_workers=1)
     return data_loader_train, data_loader_test
+

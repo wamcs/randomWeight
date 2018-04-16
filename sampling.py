@@ -115,7 +115,7 @@ def test1(times=3):
             f.write("-" * 10)
             f.write("\n number:{} \n".format(i))
             for temp in item.keys():
-                f.write("label is {}, and {}% for all data \n".format(temp, 100 * result[i] / data_size))
+                f.write("label is {}, and {}% for all data \n".format(temp, 100 * item[temp] / data_size))
 
 
 # test different mean and std
@@ -162,7 +162,7 @@ def test2():
             f.write("\n number:{} \n".format(i))
             f.write("mean is 0, std is {} \n".format(std[i]))
             for temp in item.keys():
-                f.write("label is {}, and {}% for all data \n".format(temp, 100 * result[i] / data_size))
+                f.write("label is {}, and {}% for all data \n".format(temp, 100 * item[temp] / data_size))
 
 
 # repeat experiment, to check the classified situation of random image(CIFAR)
@@ -207,7 +207,7 @@ def test3(times=3):
             f.write("-" * 10)
             f.write("\n number:{} \n".format(i))
             for temp in item.keys():
-                f.write("label is {}, and {}% for all data \n".format(temp, 100 * result[i] / data_size))
+                f.write("label is {}, and {}% for all data \n".format(temp, 100 * item[temp] / data_size))
 
 
 # test different mean and std
@@ -254,5 +254,14 @@ def test4():
             f.write("\n number:{} \n".format(i))
             f.write("mean is 0, std is {} \n".format(std[i]))
             for temp in item.keys():
-                f.write("label is {}, and {}% for all data \n".format(temp, 100 * result[i] / data_size))
+                f.write("label is {}, and {}% for all data \n".format(temp, 100 * item[temp] / data_size))
 
+
+def main():
+    test1()
+    test2()
+    test3()
+    test4()
+
+if __name__ == '__main__':
+    main()

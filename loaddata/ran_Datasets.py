@@ -169,9 +169,13 @@ class ImageNet(data.Dataset):
             img = self.transform(img)
             if self.random:
                 temp = img.numpy()
-                temp = temp.reshape((1, -1))
-                temp = self.permute_Image(temp)
-                img = torch.from_numpy(temp)
+                temp = temp.reshape((3, -1))
+                temps = []
+                for i in range(3):
+                    temps.append(self.permute_Image(temp[i]))
+                temps = np.array(temps)
+                temps = temps.reshape((3, 224, 224))
+                img = torch.from_numpy(temps).float()
         if self.target_transform is not None:
             target = self.target_transform(target)
         return img, target

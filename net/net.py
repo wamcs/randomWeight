@@ -17,9 +17,13 @@ class LeNet(nn.Module):
 
     def forward(self, x):
         out = F.relu(self.conv1(x))
+        #28
         out = F.max_pool2d(out, 2)
+        #14
         out = F.relu(self.conv2(out))
+        #10
         out = F.max_pool2d(out, 2)
+        #5
         out = out.view(out.size(0), -1)
         out = F.relu(self.fc1(out))
         out = F.relu(self.fc2(out))

@@ -1,7 +1,7 @@
 import torch
 
 
-def sample_noise(size, dim, mean, std):
+def sample_noise(size, channel, dim, mean, std):
     """
     Generate a PyTorch Tensor of uniform random noise.
 
@@ -15,10 +15,11 @@ def sample_noise(size, dim, mean, std):
     """
 
     torch.manual_seed(1)
-    data = torch.ones(size, dim * dim)
+    data = torch.ones(size, channel * dim * dim)
     temp = torch.normal(mean * data, std)
-    norm = torch.max(torch.abs(temp))
-    return temp/norm
+    #norm = torch.max(torch.abs(temp))
+    #return temp / norm
+    return temp
 
 
 # @parameter
@@ -27,5 +28,5 @@ def sample_noise(size, dim, mean, std):
 # dim: the size of random image is dim*dim
 
 def get_random_data(channel, size, dim, mean, std):
-    raw_data = sample_noise(size, dim, mean, std)
+    raw_data = sample_noise(size, channel, dim, mean, std)
     return raw_data.view(raw_data.size(0), channel, dim, dim)
