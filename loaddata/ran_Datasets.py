@@ -12,11 +12,18 @@ IMG_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm']
     this class is inherited form datasets.MNIST, what I did is shuffling original order of every data in MNIST,
     including line's and row's
 
+
 '''
+
+types = {'train': 0, 'val': 1, 'test': 2}
 
 
 class MNIST(datasets.MNIST):
-    def __init__(self, root, p, train=True, transform=None, target_transform=None, download=False, random=False):
+    def __init__(self, root, p, type, transform=None, target_transform=None, download=False, random=False):
+        if types[type] == 2:
+            train = False
+        else:
+            train = True
         super(MNIST, self).__init__(root, train, transform, target_transform, download)
         self.p = p
         if random:
@@ -24,6 +31,15 @@ class MNIST(datasets.MNIST):
                 self.train_data = self.random_resize(self.train_data)
             else:
                 self.test_data = self.random_resize(self.test_data)
+
+        if types[type] == 0:
+            self.train_data = self.train_data[:-5000]
+            self.train_labels = self.train_labels[:-5000]
+        elif types[type] == 1:
+            self.train_data = self.train_data[-5000:]
+            self.train_labels = self.train_labels[-5000:]
+        else:
+            pass
 
     def permute_mnist(self, x, n):
         x_permute = np.zeros([n, 784])
@@ -47,7 +63,11 @@ like above
 
 
 class CIFAR(datasets.CIFAR10):
-    def __init__(self, root, p, train=True, transform=None, target_transform=None, download=False, random=False):
+    def __init__(self, root, p, type, transform=None, target_transform=None, download=False, random=False):
+        if types[type] == 2:
+            train = False
+        else:
+            train = True
         super(CIFAR, self).__init__(root, train, transform, target_transform, download)
         self.p = p
         if random:
@@ -59,6 +79,15 @@ class CIFAR(datasets.CIFAR10):
                 self.test_data = self.test_data.transpose((0, 3, 1, 2))
                 self.test_data = self.random_resize(self.test_data)
                 self.test_data = self.test_data.transpose((0, 2, 3, 1))
+
+        if types[type] == 0:
+            self.train_data = self.train_data[:-5000]
+            self.train_labels = self.train_labels[:-5000]
+        elif types[type] == 1:
+            self.train_data = self.train_data[-5000:]
+            self.train_labels = self.train_labels[-5000:]
+        else:
+            pass
 
     def permute_cifar(self, x, n):
         x_permute = np.zeros([n, 3, 32 * 32]).astype(dtype=np.uint8)
@@ -102,7 +131,7 @@ def find_classes(dir):
     return class_to_idx
 
 
-def make_dataset(dir, class_to_idx, catagory, train):
+def make_dataset(dir, class_to_idx, catagory, type):
     images = []
     dir = os.path.expanduser(dir)
     for i, target in enumerate(sorted(os.listdir(dir))):
@@ -115,10 +144,14 @@ def make_dataset(dir, class_to_idx, catagory, train):
         for root, _, fnames in sorted(os.walk(d)):
             l = len(fnames)
             board = l // 10
-            if train:
-                fnames = fnames[:-board]
-            else:
+            if types[type] == 0:
+                fnames = fnames[:-2*board]
+            elif types[type] == 1:
+                fnames = fnames[-2*board:-board]
+            elif types[type] == 2:
                 fnames = fnames[-board:]
+            else:
+                pass
             for fname in sorted(fnames):
                 if is_image_file(fname):
                     path = os.path.join(root, fname)
@@ -140,10 +173,10 @@ def default_loader(path):
 
 
 class ImageNet(data.Dataset):
-    def __init__(self, root, p, category, train=True, transform=None, target_transform=None, random=False,
+    def __init__(self, root, p, category, type, transform=None, target_transform=None, random=False,
                  loader=default_loader):
         class_to_idx = find_classes(root)
-        imgs = make_dataset(root, class_to_idx, category, train)
+        imgs = make_dataset(root, class_to_idx, category, type)
         if len(imgs) == 0:
             raise (RuntimeError("Found 0 images in subfolders of: " + root + "\n"
                                                                              "Supported image extensions are: " + ",".join(

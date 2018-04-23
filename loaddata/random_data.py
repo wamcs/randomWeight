@@ -14,11 +14,15 @@ def sample_noise(size, channel, dim, mean, std):
       random noise in the range (-1, 1).
     """
 
-    torch.manual_seed(1)
     data = torch.ones(size, channel * dim * dim)
     temp = torch.normal(mean * data, std)
-    #norm = torch.max(torch.abs(temp))
-    #return temp / norm
+    temp[temp > 1] = 1
+    temp[temp < -1] = -1
+    return temp
+
+
+def sample_U_noise(size, channel, dim):
+    temp = torch.rand(size, channel * dim * dim) + torch.rand(size, channel * dim * dim) * (-1)
     return temp
 
 
@@ -27,6 +31,11 @@ def sample_noise(size, channel, dim, mean, std):
 # size: the amount of elements in a batch of random data
 # dim: the size of random image is dim*dim
 
-def get_random_data(channel, size, dim, mean, std):
+def get_N_random_data(channel, size, dim, mean, std):
     raw_data = sample_noise(size, channel, dim, mean, std)
+    return raw_data.view(raw_data.size(0), channel, dim, dim)
+
+
+def get_U_random_data(channel, size, dim):
+    raw_data = sample_U_noise(size, channel, dim)
     return raw_data.view(raw_data.size(0), channel, dim, dim)
